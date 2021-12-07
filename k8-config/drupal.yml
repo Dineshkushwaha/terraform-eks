@@ -1,0 +1,59 @@
+#deploy drupal
+apiVersion: v1
+kind: Service
+metadata:
+  name: drupal
+  labels:
+    app: drupal
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: drupal
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: drupal
+  labels:
+    app: drupal
+spec:
+  selector:
+    matchLabels:
+      app: drupal
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: drupal
+        tier: frontend
+    spec:
+      containers:
+      - image: drupal:8-apache
+        name: drupal
+        env:
+        - name: DRUPAL_DB_HOST
+          value: drupal-mysql
+        - name: DRUPAL_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: DRUPAL_DB_USER
+          value: shubham
+        - name: DRUPAL_DB_NAME
+          value: drupal-mysql
+        ports:
+        - containerPort: 80
+          name: drupal
+        volumeMounts:
+        - name: drupal-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: drupal-persistent-storage
+        persistentVolumeClaim:
+          claimName: efs-drupal
