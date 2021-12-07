@@ -7,4 +7,4 @@ metadata:
 spec:
   containers:
     - name: mywebsite-container
-      image: dhruvin30/dhsoniweb
+      image: nginx
